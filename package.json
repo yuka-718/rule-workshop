@@ -1,0 +1,22 @@
+{
+  "name": "rule-workshop",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:assets": "node scripts/assets.mjs",
+    "dev": "npm run prepare:assets && vite --host 127.0.0.1",
+    "build": "npm run prepare:assets && vite build",
+    "preview": "vite preview --host 127.0.0.1",
+    "test:ruby": "ruby test/core_test.rb",
+    "test": "node --test test/*.test.mjs",
+    "test:browser": "playwright test"
+  },
+  "dependencies": {
+    "@ruby/3.4-wasm-wasi": "2.10.1"
+  },
+  "devDependencies": {
+    "vite": "8.3.2",
+    "@playwright/test": "1.63.0"
+  }
+}

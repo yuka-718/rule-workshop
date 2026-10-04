@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f8f7f4" />
+    <meta
+      name="description"
+      content="Rubyで書いた小さなルールから、あなただけのパズルを。512通りの盤面を調べて、ひとつの答えにたどり着く問題を作ろう。"
+    />
+    <title>ルール工房 — 小さなルール、大きな発見。</title>
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="./" aria-label="ルール工房 ホーム"
+        ><span class="brand-mark" aria-hidden="true"
+          ><i></i><i></i><i></i><i></i></span
+        ><span>ルール工房<small>RULE WORKSHOP</small></span></a
+      >
+      <div class="header-right">
+        <span class="made-with">小さなルール、大きな発見。</span
+        ><a href="#guide" class="guide-link"
+          >書き方ガイド <span aria-hidden="true">↗</span></a
+        >
+      </div>
+    </header>
+    <main>
+      <section class="intro">
+        <div>
+          <div class="eyebrow">
+            <span></span> つくって、ためして、ひらめこう。
+          </div>
+          <h1>そのルールが、<em>パズルになる。</em></h1>
+          <p>
+            赤と青、9つのマス。Rubyで条件を書いて、答えがひとつの問題をつくろう。
+          </p>
+        </div>
+        <div class="intro-note">
+          <span class="mini-dot"></span><span class="mini-square"></span>
+          <div>
+            3 × 3 の小さな世界<br /><small>答えの候補は、全部で512通り。</small>
+          </div>
+        </div>
+      </section>
+      <div class="workspace-toolbar">
+        <div class="mode-tabs" role="group" aria-label="モード">
+          <button id="make-mode" class="active" aria-pressed="true">
+            <span aria-hidden="true">✎</span> つくる</button
+          ><button id="play-mode" aria-pressed="false">
+            <span aria-hidden="true">▷</span> あそぶ
+          </button>
+        </div>
+        <div class="runtime">
+          <span id="runtime-dot" class="status-dot loading"></span
+          ><span id="runtime-text" role="status">Rubyを読み込んでいます…</span
+          ><button id="retry" hidden>再試行</button>
+        </div>
+      </div>
+      <div id="notice" class="notice" role="status" hidden></div>
+      <div id="import-banner" class="import-banner" hidden>
+        <div>
+          <strong>共有されたルールが届きました</strong>
+          <p>
+            下のコードを確認してから読み込んでください。まだルールは評価していません。
+          </p>
+        </div>
+        <button id="accept-import" class="primary">
+          内容を確認して読み込む
+        </button>
+      </div>
+      <div class="workspace">
+        <section class="panel editor-panel" aria-labelledby="editor-heading">
+          <div class="panel-heading">
+            <div>
+              <span class="step">01</span>
+              <h2 id="editor-heading">ルールを書く</h2>
+            </div>
+            <button id="sample-button" class="small-button">
+              サンプルを選ぶ <span aria-hidden="true">⌄</span>
+            </button>
+          </div>
+          <div class="file-bar">
+            <span><span class="ruby-diamond">◆</span> my_puzzle.rb</span
+            ><span id="save-status">このブラウザに自動保存</span>
+          </div>
+          <div class="code-editor">
+            <pre id="line-numbers" aria-hidden="true"></pre>
+            <textarea
+              id="code"
+              aria-label="Rubyのルール"
+              spellcheck="false"
+              autocapitalize="off"
+              autocomplete="off"
+              autocorrect="off"
+              wrap="off"
+            ></textarea>
+          </div>
+          <div class="editor-footer">
+            <span>Rubyの構文を使った専用DSL</span
+            ><span id="byte-count">0 / 8,192 bytes</span>
+          </div>
+          <div class="editor-actions">
+            <p>
+              <span aria-hidden="true">↳</span>
+              数字や条件を変えて、答えの数を比べよう。
+            </p>
+            <button id="analyze" class="primary">
+              <span aria-hidden="true">⌕</span> ルールを調べる
+            </button>
+          </div>
+        </section>
+        <section class="panel result-panel" aria-labelledby="result-heading">
+          <div class="panel-heading">
+            <div>
+              <span class="step">02</span>
+              <h2 id="result-heading">答えをたしかめる</h2>
+            </div>
+            <span id="result-state" class="pill">まだ調べていません</span>
+          </div>
+          <div id="make-content">
+            <div class="result-summary">
+              <div>
+                <span class="metric-label">ルールだけでの解の数</span>
+                <div class="metric">
+                  <span id="solution-count">—</span><small>通り</small>
+                </div>
+              </div>
+              <div id="summary-copy" class="summary-copy">
+                条件に合う盤面を<br />Rubyがすべて調べます。
+              </div>
+            </div>
+            <div class="preview-heading">
+              <h3>成立する盤面</h3>
+              <span id="preview-label">最大12個のプレビュー</span>
+            </div>
+            <div id="previews" class="previews">
+              <div class="empty-preview">
+                <div class="empty-grid" aria-hidden="true">
+                  <i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i
+                  ><i></i>
+                </div>
+                <p>ここに、ルールの答えが並びます。</p>
+              </div>
+            </div>
+            <div id="generation-area" class="generation-area">
+              <div>
+                <span class="tiny-label">NEXT STEP</span>
+                <h3>答えがひとつの問題へ。</h3>
+                <p>ヒントを残して、一意に解ける問題をつくります。</p>
+              </div>
+              <button id="generate" class="primary" disabled>
+                問題を作る <span aria-hidden="true">→</span>
+              </button>
+            </div>
+          </div>
+          <div id="play-content" hidden>
+            <div class="play-title">
+              <span class="tiny-label">YOUR PUZZLE</span>
+              <h3 id="puzzle-title">まず問題を作ってみよう</h3>
+              <p id="puzzle-meta">
+                「つくる」でルールを調べて、問題を作れます。
+              </p>
+            </div>
+            <div
+              id="board"
+              class="play-board"
+              role="group"
+              aria-label="パズル盤面"
+            ></div>
+            <div class="board-legend">
+              <span><i class="shape red"></i> 赤</span
+              ><span><i class="shape blue"></i> 青</span
+              ><span><i class="hint-icon">●</i> 固定ヒント</span>
+            </div>
+            <p class="input-help">
+              クリックで 未入力 → 赤 → 青。<br />キーボード：矢印で移動、R /
+              Bで色、Deleteで消去。
+            </p>
+            <div id="judge-status" class="judge-status" role="status">
+              マスを埋めて、すべてのルールを満たそう。
+            </div>
+            <ul id="play-rules" class="play-rules"></ul>
+            <div class="play-actions">
+              <button id="reset" class="secondary" disabled>↺ やり直す</button
+              ><button id="share" class="primary" disabled>
+                共有 <span aria-hidden="true">↗</span>
+              </button>
+            </div>
+          </div>
+        </section>
+      </div>
+      <section id="guide" class="guide-section">
+        <div class="guide-intro">
+          <span class="tiny-label">A LITTLE RUBY, A LOT OF POSSIBILITIES</span>
+          <h2>ルールの書き方、はじめの一歩。</h2>
+          <p>
+            <code>rule</code> の中に、盤面
+            <code>b</code> が満たす条件をひとつ。<br />すべての条件が
+            <code>true</code> になる盤面が、答えです。
+          </p>
+        </div>
+        <div class="guide-cards">
+          <article>
+            <span class="guide-number">01 / 数える</span
+            ><code>b.count(:red) == 3</code>
+            <p>赤いマスを、ちょうど3つに。</p>
+          </article>
+          <article>
+            <span class="guide-number">02 / 場所を決める</span
+            ><code>b.cell(2, 2) == :red</code>
+            <p>2行2列、まんなかを赤に。</p>
+          </article>
+          <article>
+            <span class="guide-number">03 / 関係をつくる</span
+            ><code>!b.adjacent?(:red)</code>
+            <p>赤どうしは上下左右にくっつけない。</p>
+          </article>
+        </div>
+        <details>
+          <summary>使える構文と制約をすべて見る <span>＋</span></summary>
+          <div class="guide-details">
+            <p>
+              3×3・赤と青の2色専用です。座標は1始まり（1〜3）。未入力のマスはプレイ中だけの状態です。
+            </p>
+            <div class="table-scroll">
+              <table>
+                <thead>
+                  <tr>
+                    <th>書き方</th>
+                    <th>調べられること</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>b.count(:red)</code></td>
+                    <td>盤面全体の赤の数</td>
+                  </tr>
+                  <tr>
+                    <td><code>b.cell(1, 2)</code></td>
+                    <td>1行2列の色</td>
+                  </tr>
+                  <tr>
+                    <td><code>b.row_count(1, :red)</code></td>
+                    <td>1行目の赤の数</td>
+                  </tr>
+                  <tr>
+                    <td><code>b.col_count(2, :blue)</code></td>
+                    <td>2列目の青の数</td>
+                  </tr>
+                  <tr>
+                    <td><code>b.adjacent?(:red)</code></td>
+                    <td>赤が上下左右に隣接するか（斜めは含まない）</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              <code>:red</code> / <code>:blue</code>、整数0〜9、<code
+                >true</code
+              >
+              / <code>false</code>、比較
+              <code>== != &lt; &lt;= &gt; &gt;=</code>、論理
+              <code>&amp;&amp; || !</code
+              >、括弧が使えます。メソッドの引数には数値・色を直接書きます。
+            </p>
+            <p>
+              通常のRubyを自由に実行する環境ではありません。変数代入、ループ、定義、定数参照、文字列の式展開、任意のメソッド呼び出しは使えません。最大8,192バイト・24ルール・構文木の深さ64・2,048ノード。計算の上限は8秒です。
+            </p>
+            <p>
+              生成時は一意解を保ちながらヒントを外します。ヒント数が最少になる保証はありません。データはこのブラウザに保存され、共有URLにはルールとヒントのみを含めます。
+            </p>
+          </div>
+        </details>
+      </section>
+    </main>
+    <footer>
+      <span class="footer-brand">ルール工房 <small>RULE WORKSHOP</small></span
+      ><span>Rubyで考える。自分でつくる。誰かと遊ぶ。</span
+      ><a
+        href="https://github.com/yuka-718/rule-workshop"
+        target="_blank"
+        rel="noopener noreferrer"
+        >ソースコード ↗</a
+      >
+    </footer>
+    <dialog id="samples-dialog">
+      <div class="dialog-heading">
+        <div>
+          <span class="tiny-label">START WITH AN IDEA</span>
+          <h2>どのルールから始める？</h2>
+        </div>
+        <button class="close-dialog" aria-label="閉じる">×</button>
+      </div>
+      <p class="dialog-caption">
+        選んだサンプルで編集中のコードを置き換えます。
+      </p>
+      <div id="sample-list"></div>
+    </dialog>
+    <dialog id="share-dialog">
+      <div class="dialog-heading">
+        <div>
+          <span class="tiny-label">MADE BY YOU</span>
+          <h2>パズルを届けよう。</h2>
+        </div>
+        <button class="close-dialog" aria-label="閉じる">×</button>
+      </div>
+      <p>このURLだけで、同じ問題を遊べます。<br />答えは含まれていません。</p>
+      <label for="share-url">共有URL</label
+      ><input id="share-url" readonly /><button id="copy-link" class="primary">
+        URLをコピー
+      </button>
+      <p id="copy-status" role="status"></p>
+    </dialog>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

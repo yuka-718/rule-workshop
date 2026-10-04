@@ -1,0 +1,26 @@
+[
+  {
+    "id": "apart",
+    "name": "赤を3つ、くっつけずに",
+    "description": "赤の数と、隣り合う関係を考える。",
+    "code": "puzzle \"赤を3つ、くっつけずに\" do\n  size 3, 3\n  colors :red, :blue\n\n  rule \"赤はちょうど3マス\" do |b|\n    b.count(:red) == 3\n  end\n\n  rule \"赤どうしは上下左右に隣り合わない\" do |b|\n    !b.adjacent?(:red)\n  end\nend\n"
+  },
+  {
+    "id": "rows",
+    "name": "一列に、ひとつずつ",
+    "description": "それぞれの行と列に、赤をひとつ。",
+    "code": "puzzle \"一列に、ひとつずつ\" do\n  size 3, 3\n  colors :red, :blue\n\n  rule \"各行に赤を1つ\" do |b|\n    b.row_count(1, :red) == 1 && b.row_count(2, :red) == 1 && b.row_count(3, :red) == 1\n  end\n\n  rule \"各列に赤を1つ\" do |b|\n    b.col_count(1, :red) == 1 && b.col_count(2, :red) == 1 && b.col_count(3, :red) == 1\n  end\nend\n"
+  },
+  {
+    "id": "center",
+    "name": "まんなかは赤",
+    "description": "まんなかから始まる、小さな推理。",
+    "code": "puzzle \"まんなかは赤\" do\n  size 3, 3\n  colors :red, :blue\n\n  rule \"まんなかは赤\" do |b|\n    b.cell(2, 2) == :red\n  end\n\n  rule \"赤はちょうど4マス\" do |b|\n    b.count(:red) == 4\n  end\n\n  rule \"1行目の青は2マス\" do |b|\n    b.row_count(1, :blue) == 2\n  end\nend\n"
+  },
+  {
+    "id": "none",
+    "name": "あれ？ 解がない",
+    "description": "矛盾するルールを直してみよう。",
+    "code": "puzzle \"あれ？ 解がない\" do\n  size 3, 3\n  colors :red, :blue\n\n  rule \"赤は3マス\" do |b|\n    b.count(:red) == 3\n  end\n\n  rule \"でも赤は4マス\" do |b|\n    b.count(:red) == 4\n  end\nend\n"
+  }
+]
