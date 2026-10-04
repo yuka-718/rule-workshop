@@ -11,9 +11,10 @@
 | @playwright/test / playwright / playwright-core | 1.63.0 | https://github.com/microsoft/playwright | Apache-2.0、テスト時のみ |
 | @axe-core/playwright / axe-core | 4.13.0 | https://github.com/dequelabs/axe-core-npm | MPL-2.0、アクセシビリティのテスト時のみ |
 | Minitest（CI用） | 5.25.5 | https://github.com/minitest/minitest | MIT、Rubyテスト時のみ |
+| Noto Sans JP | 2.004 | https://github.com/google/fonts/tree/main/ofl/notosansjp | SIL Open Font License 1.1、作品紹介PDFの日本語フォント |
 
 全npm依存の正確な解決結果は package-lock.json を参照してください。ランタイム配布元のLICENSEとNOTICEを改変せず public/vendorへコピーし、公開ビルドでは `vendor/LICENSE` と `vendor/NOTICE` に同梱します。CRubyおよびWASMに含まれる標準ライブラリ・WASI依存の著作権・条件はそれらの原文を参照してください。
 
-画像、音楽、外部フォントは使用していません。図形・ロゴはこのプロジェクトのCSS / SVGで作成しています。UIはOS標準の日本語フォントを使います。
+画像、音楽は使用していません。図形・ロゴはこのプロジェクトのCSS / SVGで作成しています。WebアプリのUIはOS標準の日本語フォントを使い、作品紹介PDFにはNoto Sans JPを埋め込んでいます。
 
 WASI shimのMIT / Apache-2.0原文とtslibのライセンスもvendor/に同梱しています。
