@@ -10,7 +10,8 @@
 - RubyのParser、Board、Rule、Puzzle、Solver、Generator、APIの実装。
 - HTML / CSS / JavaScriptの日本語UI、操作、保存、共有、エラー状態の実装。
 - 4サンプル、通常Ruby・共有データ・ブラウザの自動テストの作成と実行。
-- GitHub Actions / Pages公開設定とドキュメントの作成。
+- 新規公開リポジトリの作成、コードの送信、GitHub Actions / Pages公開設定とドキュメントの作成。
+- 公開URLのHTTP 200と、公開サイトでの編集・生成・プレイ・共有をブラウザで実測。
 - 自動テストで見つかった問題の修正、画面の確認。
 
 このコード・デザイン・ドキュメントの初稿はAIによるものです。応募者本人が考案・実装・確認した範囲を、AIが推測して記録してはいません。実測したテスト結果は docs/verification.md に記録します。
