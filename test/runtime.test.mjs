@@ -54,6 +54,8 @@ test("separate boot/calculation deadlines terminate workers; retry and request I
     workers[2].emit({ type: "ready", smoke: { version: "new" } });
     worker.emit({ type: "boot-error", error: "stale" });
     assert.equal(runtime.ready, true);
+    worker.onerror({ message: "late error from terminated worker" });
+    assert.equal(runtime.ready, true);
   } finally {
     runtime?.stop();
     globalThis.Worker = originalWorker;

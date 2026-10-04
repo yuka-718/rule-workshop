@@ -12,6 +12,12 @@
     <link rel="icon" type="image/svg+xml" href="./favicon.svg" />
   </head>
   <body>
+    <a class="skip-link" href="#workspace">操作画面へ移動</a>
+    <noscript
+      ><p class="notice">
+        このアプリはJavaScriptとWebAssemblyを使います。ブラウザのJavaScriptを有効にして再読み込みしてください。
+      </p></noscript
+    >
     <header class="site-header">
       <a class="brand" href="./" aria-label="ルール工房 ホーム"
         ><span class="brand-mark" aria-hidden="true"
@@ -25,7 +31,7 @@
         >
       </div>
     </header>
-    <main>
+    <main id="main">
       <section class="intro">
         <div>
           <div class="eyebrow">
@@ -51,13 +57,27 @@
             <span aria-hidden="true">▷</span> あそぶ
           </button>
         </div>
-        <div class="runtime">
-          <span id="runtime-dot" class="status-dot loading"></span
-          ><span id="runtime-text" role="status">Rubyを読み込んでいます…</span
-          ><button id="retry" hidden>再試行</button>
+        <div class="toolbar-tools">
+          <button id="import-file-button" class="small-button">
+            問題ファイルを開く</button
+          ><input
+            type="file"
+            id="import-file"
+            accept=".json,application/json"
+            hidden
+          />
+          <div class="runtime">
+            <span id="runtime-dot" class="status-dot loading"></span
+            ><span id="runtime-text" role="status">Rubyを読み込んでいます…</span
+            ><button id="retry" hidden>再試行</button>
+          </div>
         </div>
       </div>
       <div id="notice" class="notice" role="status" hidden></div>
+      <div id="draft-recovery" class="draft-recovery" hidden>
+        <span>前のルールを一時保存しています。</span
+        ><button id="undo-sample" class="small-button">元のルールに戻す</button>
+      </div>
       <div id="import-banner" class="import-banner" hidden>
         <div>
           <strong>共有されたルールが届きました</strong>
@@ -69,7 +89,7 @@
           内容を確認して読み込む
         </button>
       </div>
-      <div class="workspace">
+      <div class="workspace" id="workspace" tabindex="-1">
         <section class="panel editor-panel" aria-labelledby="editor-heading">
           <div class="panel-heading">
             <div>
@@ -89,6 +109,7 @@
             <textarea
               id="code"
               aria-label="Rubyのルール"
+              aria-describedby="editor-key-help"
               spellcheck="false"
               autocapitalize="off"
               autocomplete="off"
@@ -96,10 +117,14 @@
               wrap="off"
             ></textarea>
           </div>
+          <div id="editor-error" class="editor-error" role="alert" hidden></div>
           <div class="editor-footer">
             <span>Rubyの構文を使った専用DSL</span
             ><span id="byte-count">0 / 8,192 bytes</span>
           </div>
+          <p id="editor-key-help" class="editor-key-help">
+            Tab：字下げ ／ Esc → Tab：エディターを出る
+          </p>
           <div class="editor-actions">
             <p>
               <span aria-hidden="true">↳</span>
@@ -130,6 +155,12 @@
                 条件に合う盤面を<br />Rubyがすべて調べます。
               </div>
             </div>
+            <div id="count-change" class="count-change" hidden></div>
+            <details id="rule-insights" class="rule-insights" hidden>
+              <summary>ルールごとの絞り込みを見る</summary>
+              <p>上から順に条件を加えたときの、残る盤面の数です。</p>
+              <ol id="rule-stats"></ol>
+            </details>
             <div class="preview-heading">
               <h3>成立する盤面</h3>
               <span id="preview-label">最大12個のプレビュー</span>
@@ -155,6 +186,14 @@
             </div>
           </div>
           <div id="play-content" hidden>
+            <div id="play-empty" class="play-empty">
+              <p>
+                まだ問題がありません。サンプルから、最初の問題を作ってみよう。
+              </p>
+              <button id="start-puzzle" class="primary">
+                サンプルで問題を作る
+              </button>
+            </div>
             <div class="play-title">
               <span class="tiny-label">YOUR PUZZLE</span>
               <h3 id="puzzle-title">まず問題を作ってみよう</h3>
@@ -167,13 +206,23 @@
               class="play-board"
               role="group"
               aria-label="パズル盤面"
+              aria-describedby="board-instructions"
             ></div>
+            <div class="input-tools" role="group" aria-label="入力する色">
+              <button data-paint="cycle" aria-pressed="true" class="active">
+                順番に切替</button
+              ><button data-paint="red" aria-pressed="false">
+                <i class="shape red" aria-hidden="true"></i> 赤</button
+              ><button data-paint="blue" aria-pressed="false">
+                <i class="shape blue" aria-hidden="true"></i> 青</button
+              ><button data-paint="empty" aria-pressed="false">消す</button>
+            </div>
             <div class="board-legend">
               <span><i class="shape red"></i> 赤</span
               ><span><i class="shape blue"></i> 青</span
               ><span><i class="hint-icon">●</i> 固定ヒント</span>
             </div>
-            <p class="input-help">
+            <p class="input-help" id="board-instructions">
               クリックで 未入力 → 赤 → 青。<br />キーボード：矢印で移動、R /
               Bで色、Deleteで消去。
             </p>
@@ -182,6 +231,7 @@
             </div>
             <ul id="play-rules" class="play-rules"></ul>
             <div class="play-actions">
+              <button id="undo-move" class="secondary" disabled>1手戻す</button>
               <button id="reset" class="secondary" disabled>↺ やり直す</button
               ><button id="share" class="primary" disabled>
                 共有 <span aria-hidden="true">↗</span>
@@ -190,7 +240,7 @@
           </div>
         </section>
       </div>
-      <section id="guide" class="guide-section">
+      <section id="guide" class="guide-section" tabindex="-1">
         <div class="guide-intro">
           <span class="tiny-label">A LITTLE RUBY, A LOT OF POSSIBILITIES</span>
           <h2>ルールの書き方、はじめの一歩。</h2>
@@ -284,24 +334,24 @@
         >ソースコード ↗</a
       >
     </footer>
-    <dialog id="samples-dialog">
+    <dialog id="samples-dialog" aria-labelledby="samples-title">
       <div class="dialog-heading">
         <div>
           <span class="tiny-label">START WITH AN IDEA</span>
-          <h2>どのルールから始める？</h2>
+          <h2 id="samples-title">どのルールから始める？</h2>
         </div>
         <button class="close-dialog" aria-label="閉じる">×</button>
       </div>
       <p class="dialog-caption">
-        選んだサンプルで編集中のコードを置き換えます。
+        選んだサンプルに切り替えます。元のルールは、あとから戻せます。
       </p>
       <div id="sample-list"></div>
     </dialog>
-    <dialog id="share-dialog">
+    <dialog id="share-dialog" aria-labelledby="share-title">
       <div class="dialog-heading">
         <div>
           <span class="tiny-label">MADE BY YOU</span>
-          <h2>パズルを届けよう。</h2>
+          <h2 id="share-title">パズルを届けよう。</h2>
         </div>
         <button class="close-dialog" aria-label="閉じる">×</button>
       </div>
@@ -310,6 +360,12 @@
       ><input id="share-url" readonly /><button id="copy-link" class="primary">
         URLをコピー
       </button>
+      <button id="download-puzzle" class="secondary">
+        問題をファイルに保存
+      </button>
+      <p class="file-help">
+        長いURLを送れないときは、保存した問題ファイルを渡せます。
+      </p>
       <p id="copy-status" role="status"></p>
     </dialog>
     <script type="module" src="/src/main.js"></script>

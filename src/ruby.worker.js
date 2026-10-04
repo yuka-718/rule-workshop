@@ -6,7 +6,31 @@ self.onmessage = async ({ data }) => {
     try {
       const response = await fetch(data.wasm);
       if (!response.ok) throw new Error(`WASM HTTP ${response.status}`);
-      const module = await WebAssembly.compile(await response.arrayBuffer());
+      let bytes;
+      if (response.body?.getReader) {
+        const reader = response.body.getReader();
+        const chunks = [];
+        let received = 0,
+          notified = 0;
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          chunks.push(value);
+          received += value.length;
+          if (received - notified >= 1048576) {
+            notified = received;
+            self.postMessage({ type: "progress", stage: "download", received });
+          }
+        }
+        bytes = new Uint8Array(received);
+        let offset = 0;
+        for (const chunk of chunks) {
+          bytes.set(chunk, offset);
+          offset += chunk.length;
+        }
+      } else bytes = await response.arrayBuffer();
+      self.postMessage({ type: "progress", stage: "compile" });
+      const module = await WebAssembly.compile(bytes);
       ({ vm } = await DefaultRubyVM(module));
       // Only this author-controlled source is loaded as Ruby code.
       vm.eval(core);

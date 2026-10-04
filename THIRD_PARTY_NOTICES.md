@@ -9,6 +9,7 @@
 | tslib | 2.8.1（lockfile） | https://github.com/microsoft/tslib | 0BSD、TypeScript補助ランタイム |
 | Vite | 8.3.2 | https://github.com/vitejs/vite | MIT、ビルド時のみ |
 | @playwright/test / playwright / playwright-core | 1.63.0 | https://github.com/microsoft/playwright | Apache-2.0、テスト時のみ |
+| @axe-core/playwright / axe-core | 4.13.0 | https://github.com/dequelabs/axe-core-npm | MPL-2.0、アクセシビリティのテスト時のみ |
 | Minitest（CI用） | 5.25.5 | https://github.com/minitest/minitest | MIT、Rubyテスト時のみ |
 
 全npm依存の正確な解決結果は package-lock.json を参照してください。ランタイム配布元のLICENSEとNOTICEを改変せず public/vendorへコピーし、公開ビルドでは `vendor/LICENSE` と `vendor/NOTICE` に同梱します。CRubyおよびWASMに含まれる標準ライブラリ・WASI依存の著作権・条件はそれらの原文を参照してください。

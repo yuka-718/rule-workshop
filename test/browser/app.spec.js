@@ -27,6 +27,7 @@ async function rpc(page, requests) {
             120000,
           );
           worker.onmessage = ({ data }) => {
+            if (data.type === "progress") return;
             clearTimeout(timer);
             resolve(data);
           };
@@ -242,7 +243,14 @@ test("mobile fits the viewport and all WASM assets load from the Pages subpath",
   await page.setViewportSize({ width: 390, height: 844 });
   const remote = [];
   page.on("request", (r) => {
-    if (!r.url().startsWith("http://127.0.0.1:5174/")) remote.push(r.url());
+    if (
+      !r
+        .url()
+        .startsWith(
+          new URL(process.env.TEST_BASE_URL || "http://127.0.0.1:5174/").origin,
+        )
+    )
+      remote.push(r.url());
   });
   await ready(page);
   expect(

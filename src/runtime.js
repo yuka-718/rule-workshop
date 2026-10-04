@@ -14,9 +14,19 @@ export class RubyRuntime {
     this.stop("Rubyを再起動しました。もう一度操作してください。");
     this.ready = false;
     this.onState("loading");
-    const worker = new Worker(new URL("./ruby.worker.js", import.meta.url), {
-      type: "module",
-    });
+    let worker;
+    try {
+      if (typeof Worker === "undefined" || typeof WebAssembly === "undefined")
+        throw new Error("WebAssembly または Web Worker に未対応です。");
+      worker = new Worker(new URL("./ruby.worker.js", import.meta.url), {
+        type: "module",
+      });
+    } catch (error) {
+      this.fail(
+        `Rubyを起動できませんでした。対応ブラウザで再試行してください。${error.message}`,
+      );
+      return;
+    }
     this.worker = worker;
     this.bootTimer = setTimeout(
       () =>
@@ -32,6 +42,8 @@ export class RubyRuntime {
         this.ready = true;
         this.smoke = data.smoke;
         this.onState("ready", data.smoke);
+      } else if (data.type === "progress") {
+        this.onState("loading", data);
       } else if (data.type === "boot-error") {
         this.fail(
           `Rubyを読み込めませんでした。通信またはWebAssemblyの対応を確認し、再試行してください。 ${data.error}`,
@@ -42,13 +54,21 @@ export class RubyRuntime {
         clearTimeout(item.timer);
         this.pending.delete(data.id);
         if (data.ok) item.resolve(data.result);
-        else item.reject(new Error(data.error));
+        else
+          item.reject(
+            Object.assign(new Error(data.error), {
+              line: data.line,
+              column: data.column,
+            }),
+          );
       }
     };
-    worker.onerror = (event) =>
+    worker.onerror = (event) => {
+      if (this.worker !== worker) return;
       this.fail(
         `Ruby Workerでエラーが発生しました。再試行してください。${event.message || ""}`,
       );
+    };
     worker.postMessage({
       type: "init",
       wasm: new URL("./vendor/ruby+stdlib.wasm", document.baseURI).href,

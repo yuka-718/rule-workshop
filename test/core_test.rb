@@ -70,4 +70,48 @@ class CoreTest < Minitest::Test
     assert_equal 1, restored[:constrained_count]
     assert_raises(R::InputError) { R::API.dispatch({'action'=>'restore','code'=>source,'hints'=>[nil]*9}) }
   end
+  def test_every_color_count_and_zero_hint_generation
+    [1, 9, 36, 84, 126, 126, 84, 36, 9, 1].each_with_index do |count, red|
+      assert_equal count, solve(code("b.count(:red) == #{red}")).solutions.size
+    end
+    result = R::Generator.new(solve(code('b.count(:red) == 0'))).generate(17)
+    assert_equal [nil] * 9, result[:hints]
+    assert_equal 0, result[:hint_count]
+  end
+
+  def test_progressive_rule_counts_explain_the_first_conflict
+    sample = FIXTURES.find { |f| f['id'] == 'apart' }
+    stats = solve(sample['code']).rule_stats
+    assert_equal [84, 22], stats.map { |r| r[:remaining] }
+    assert_equal [512, 84], stats.map { |r| r[:before] }
+    conflict = FIXTURES.find { |f| f['id'] == 'none' }
+    assert_equal [84, 0], solve(conflict['code']).rule_stats.map { |r| r[:remaining] }
+  end
+
+  def test_error_locations_and_end_marker_are_validated
+    result = JSON.parse(R::API.handle(JSON.generate({'action'=>'analyze', 'code'=>code('b.count(:red) ==')})))
+    assert_equal false, result['ok']
+    assert_operator result['line'], :>=, 5
+    result = JSON.parse(R::API.handle(JSON.generate({'action'=>'analyze', 'code'=>code('Kernel.exit')})))
+    assert_equal 5, result['line']
+    assert_raises(R::InputError) { solve(code('true') + "\n__END__\nanything") }
+    assert_raises(R::InputError) { solve('#' + '赤' * 3000) }
+    assert_equal false, JSON.parse(R::API.handle('{'))['ok']
+  end
+
+  def test_duplicate_rule_names_have_independent_statuses
+    source = "puzzle \"test\" do\nsize 3, 3\ncolors :red, :blue\nrule \"same\" do |b|\nb.count(:red) == 3\nend\nrule \"same\" do |b|\nb.count(:red) == 4\nend\nend"
+    result = R::API.dispatch({'action'=>'judge','code'=>source,'hints'=>[nil]*9,'cells'=>['red']*3 + ['blue']*6})
+    assert_equal [true, false], result[:results].map { |r| r[:passed] }
+    assert_equal 'incorrect', result[:status]
+  end
+
+  def test_invalid_seeds_and_hint_types
+    solver = solve(FIXTURES[1]['code'])
+    [-1, 2147483648, 1.5, '42', nil].each do |seed|
+      assert_raises(R::InputError) { R::Generator.new(solver).generate(seed) }
+    end
+    [nil, [], [false]*9, ['green']*9].each { |hints| assert_raises(R::InputError) { R::API.cells(hints) } }
+  end
+
 end

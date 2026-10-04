@@ -5,7 +5,20 @@ require 'json'
 module RuleWorkshop
   MAX_BYTES = 8192
   MAX_RULES = 24
-  class InputError < StandardError; end
+  class InputError < StandardError
+    attr_reader :line, :column
+    def initialize(message, line = nil, column = nil)
+      super(message)
+      @line, @column = line, column
+    end
+  end
+
+  class SyntaxTree < Ripper::SexpBuilderPP
+    attr_reader :syntax_error
+    def on_parse_error(_message)
+      @syntax_error ||= [lineno, column + 1]
+    end
+  end
 
   class Board
     include Enumerable
@@ -37,17 +50,35 @@ module RuleWorkshop
   # collection of author-owned Procs, with static argument and result types.
   class Parser
     def reject!(message = '未対応の構文です。書き方ガイドの構文だけを使ってください。')
-      raise InputError, message
+      location = location_of(@context)
+      raise InputError.new(message, *location)
+    end
+    def location_of(node)
+      return [] unless node.is_a?(Array)
+      if node[0].is_a?(Symbol) && node[0].to_s.start_with?('@') && node[2].is_a?(Array)
+        return [node[2][0], node[2][1] + 1]
+      end
+      node.each do |child|
+        found = location_of(child)
+        return found unless found.empty?
+      end
+      []
     end
     def parse(code)
       reject!('ルールはUTF-8の8,192バイト以内にしてください。') unless code.is_a?(String) && code.valid_encoding? && code.bytesize <= MAX_BYTES
-      tree = Ripper.sexp(code)
-      reject!('Rubyの構文エラーです。括弧、do / end、引用符を確認してください。') unless tree
+      @context = nil
+      reader = SyntaxTree.new(code)
+      tree = reader.parse
+      if reader.syntax_error || !tree
+        raise InputError.new('Rubyの構文エラーです。括弧、do / end、引用符を確認してください。', *(reader.syntax_error || []))
+      end
+      reject!('__END__ によるデータの埋め込みには対応していません。') if Ripper.lex(code).any? { |token| token[1] == :on___end__ }
       @nodes = 0
       check_tree(tree)
       root = tree[1]
       reject!('puzzle のブロックを1つだけ書いてください。') unless root.size == 1
       outer = root.first
+      @context = outer
       reject! unless outer[0] == :method_add_block
       name = string(single(command(outer[1], 'puzzle')))
       block = outer[2]
@@ -91,6 +122,7 @@ module RuleWorkshop
       node[1]
     end
     def command(node, expected)
+      @context = node
       reject!("#{expected} の書き方を確認してください。") unless node && node[0] == :command && node[1][0..1] == [:@ident, expected]
       args(node[2])
     end
@@ -118,6 +150,7 @@ module RuleWorkshop
       n
     end
     def expression(node)
+      @context = node
       reject! unless node.is_a?(Array)
       case node[0]
       when :@int
@@ -180,9 +213,14 @@ module RuleWorkshop
   end
 
   class Solver
-    attr_reader :solutions
+    attr_reader :solutions, :rule_stats
     def initialize(puzzle)
-      @solutions = (0...512).map { |n| Board.new((0...9).map { |i| n[i] == 1 ? :red : :blue }) }.select { |board| puzzle.satisfied?(board) }
+      @solutions = (0...512).map { |n| Board.new((0...9).map { |i| n[i] == 1 ? :red : :blue }) }
+      @rule_stats = puzzle.rules.map do |rule|
+        before = @solutions.size
+        @solutions = @solutions.select { |board| rule.satisfied?(board) }
+        { name: rule.name, before: before, remaining: @solutions.size }
+      end
     end
     def with_hints(hints); @solutions.select { |board| board.matches?(hints) }; end
   end
@@ -226,7 +264,7 @@ module RuleWorkshop
         common = { name: puzzle.name, rules: puzzle.rules.map(&:name), count: solver.solutions.size }
         case request['action']
         when 'analyze'
-          common.merge(previews: solver.solutions.first(12).map(&:cells))
+          common.merge(previews: solver.solutions.first(12).map(&:cells), rule_stats: solver.rule_stats)
         when 'generate'
           common.merge(Generator.new(solver).generate(request['seed']))
         when 'restore'
@@ -242,8 +280,9 @@ module RuleWorkshop
         end
         return { status: 'incomplete', message: '入力中です。空いているマスを埋めてみましょう。' } if input.include?(nil)
         board = Board.new(input)
-        failed = puzzle.rules.reject { |rule| rule.satisfied?(board) }.map(&:name)
-        { status: failed.empty? ? 'correct' : 'incorrect', failed: failed, message: failed.empty? ? 'できました！ すべてのルールを満たしています。' : 'あと少し。満たしていないルールを確認しましょう。' }
+        results = puzzle.rules.map { |rule| { name: rule.name, passed: rule.satisfied?(board) } }
+        failed = results.reject { |r| r[:passed] }.map { |r| r[:name] }
+        { status: failed.empty? ? 'correct' : 'incorrect', failed: failed, results: results, message: failed.empty? ? 'できました！ すべてのルールを満たしています。' : 'あと少し。満たしていないルールを確認しましょう。' }
       else
         raise InputError, '未対応の操作です。'
       end
@@ -251,8 +290,10 @@ module RuleWorkshop
     def self.handle(json)
       raise InputError, 'リクエストが大きすぎます。' if json.bytesize > 65536
       JSON.generate({ ok: true, result: dispatch(JSON.parse(json)) })
-    rescue InputError, JSON::ParserError => e
-      JSON.generate({ ok: false, error: e.message })
+    rescue InputError => e
+      JSON.generate({ ok: false, error: e.message, line: e.line, column: e.column })
+    rescue JSON::ParserError
+      JSON.generate({ ok: false, error: 'JSONデータが壊れています。' })
     end
   end
 end
