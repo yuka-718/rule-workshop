@@ -62,7 +62,14 @@ test("guide keeps the shared URL, sample selection detaches it, and returning to
   await expect(page.locator("#import-banner")).toBeVisible();
   await page.locator(".guide-link").click();
   expect(page.url()).toBe(url);
-  await page.locator("#accept-import").click();
+  await expect(page.locator("#accept-import")).toBeEnabled();
+  // Check in the same task as dispatch, before even a fast Worker can finish.
+  expect(await page.evaluate(() => {
+    document.querySelector("#accept-import").click();
+    return ["make-mode", "play-mode"].map(
+      (id) => document.getElementById(id).disabled,
+    );
+  })).toEqual([true, true]);
   await page.locator("#make-mode").click();
   await page.locator("#analyze").click();
   await expect(page.locator("#solution-count")).toHaveText("22");

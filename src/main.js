@@ -87,6 +87,10 @@ function updateLines() {
 }
 function updateButtons() {
   const ready = !!runtime?.ready;
+  // A pending restore/generation installs a board and enters play when done.
+  // Prevent a mode click from being silently overwritten by that response.
+  $("make-mode").disabled = busy;
+  $("play-mode").disabled = busy;
   $("analyze").disabled = !ready || busy || !!pendingImport;
   $("generate").disabled =
     !ready ||
