@@ -1,7 +1,6 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { readFileSync } from "node:fs";
-import { encodeShare } from "../../src/share.js";
 const fixtures = JSON.parse(readFileSync("test/fixtures.json", "utf8"));
 const custom = fixtures.find((f) => f.id === "three").code;
 async function ready(page) {
@@ -102,43 +101,6 @@ test("painting, move undo, reset undo and clear input remain distinct", async ({
   await page.locator('[data-paint="empty"]').click();
   await cell.click();
   await expect(cell).toHaveAttribute("aria-label", /未入力/);
-});
-test("problem file round trip requires review, omits answers and rejects oversized imports", async ({
-  page,
-  browser,
-}) => {
-  await ready(page);
-  await shareURL(page);
-  const downloadPromise = page.waitForEvent("download");
-  await page.locator("#download-puzzle").click();
-  const download = await downloadPromise;
-  const data = JSON.parse(readFileSync(await download.path(), "utf8"));
-  expect(Object.keys(data).sort()).toEqual(["code", "hints", "v"]);
-  const c = await browser.newContext();
-  const other = await c.newPage();
-  await other.goto(new URL("./", page.url()).href);
-  await other
-    .locator("#import-file")
-    .setInputFiles({
-      name: "puzzle.json",
-      mimeType: "application/json",
-      buffer: Buffer.from(JSON.stringify(data)),
-    });
-  await expect(other.locator("#import-banner")).toBeVisible();
-  await expect(other.locator("#analyze")).toBeDisabled();
-  await other.locator("#accept-import").click();
-  await expect(other.locator("#puzzle-meta")).toContainText(
-    "固定ヒント込み：1通り",
-  );
-  await other
-    .locator("#import-file")
-    .setInputFiles({
-      name: "big.json",
-      mimeType: "application/json",
-      buffer: Buffer.alloc(65537, 65),
-    });
-  await expect(other.locator("#notice")).toContainText("64KB");
-  await c.close();
 });
 test("no automatic evaluation of code edited while WASM is loading", async ({
   page,

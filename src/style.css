@@ -1477,13 +1477,6 @@ dialog label {
 .judge-status.incorrect {
   color: #963b32;
 }
-#download-puzzle {
-  width: 100%;
-  margin-top: 10px;
-}
-.file-help {
-  font-size: 12px;
-}
 .runtime {
   font-size: 11px;
 }

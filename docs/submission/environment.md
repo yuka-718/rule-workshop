@@ -40,7 +40,7 @@ npm run test:browser
 
 ## テスト環境の補足
 
-検証したMacではPlaywrightのWebKitが空ページ生成でも停止しました。Macで同じ現象が出る場合は `npm run test:browser -- --project=chromium --project=firefox` を使用してください。LinuxのGitHub Actionsでは3つのエンジンで各14件、計42件が成功しました。実際のSafariアプリやiOS実機の動作確認とは区別しています。
+検証したMacではPlaywrightのWebKitが空ページ生成でも停止しました。Macで同じ現象が出る場合は `npm run test:browser -- --project=chromium --project=firefox` を使用してください。LinuxのGitHub Actionsで3つのエンジンを検証しています。最新の実行結果は検証記録を参照してください。実際のSafariアプリやiOS実機の動作確認とは区別しています。
 
 ## 制限
 

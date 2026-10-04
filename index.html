@@ -58,14 +58,6 @@
           </button>
         </div>
         <div class="toolbar-tools">
-          <button id="import-file-button" class="small-button">
-            問題ファイルを開く</button
-          ><input
-            type="file"
-            id="import-file"
-            accept=".json,application/json"
-            hidden
-          />
           <div class="runtime">
             <span id="runtime-dot" class="status-dot loading"></span
             ><span id="runtime-text" role="status">Rubyを読み込んでいます…</span
@@ -360,12 +352,6 @@
       ><input id="share-url" readonly /><button id="copy-link" class="primary">
         URLをコピー
       </button>
-      <button id="download-puzzle" class="secondary">
-        問題をファイルに保存
-      </button>
-      <p class="file-help">
-        長いURLを送れないときは、保存した問題ファイルを渡せます。
-      </p>
       <p id="copy-status" role="status"></p>
     </dialog>
     <script type="module" src="/src/main.js"></script>

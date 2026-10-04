@@ -4,7 +4,6 @@ import { RubyRuntime } from "./runtime.js";
 import {
   encodeShare,
   decodeShare,
-  validateShare,
   MAX_CODE_BYTES,
 } from "./share.js";
 const $ = (id) => document.getElementById(id);
@@ -640,43 +639,6 @@ $("copy-link").addEventListener("click", async () => {
     $("share-url").select();
     $("copy-status").textContent =
       "自動コピーできませんでした。選択したURLを手動でコピーしてください。";
-  }
-});
-$("download-puzzle").addEventListener("click", () => {
-  if (!puzzle) return;
-  const data = validateShare({ v: 1, code: puzzle.code, hints: puzzle.hints });
-  const url = URL.createObjectURL(
-    new Blob([JSON.stringify(data, null, 2)], { type: "application/json" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "rule-workshop-puzzle.json";
-  link.click();
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-});
-$("import-file-button").addEventListener("click", () =>
-  $("import-file").click(),
-);
-$("import-file").addEventListener("change", async () => {
-  const file = $("import-file").files?.[0];
-  $("import-file").value = "";
-  if (!file) return;
-  const current = revision;
-  try {
-    if (file.size > 65536)
-      throw new Error("問題ファイルは64KB以内にしてください。");
-    const data = validateShare(JSON.parse(await file.text()));
-    if (current !== revision) return;
-    if (location.hash.startsWith("#p="))
-      history.replaceState(null, "", location.pathname + location.search);
-    presentImport(data);
-  } catch (error) {
-    notice(
-      error instanceof SyntaxError
-        ? "問題ファイルのJSONが壊れています。"
-        : error.message,
-      true,
-    );
   }
 });
 $("accept-import").addEventListener("click", async () => {
