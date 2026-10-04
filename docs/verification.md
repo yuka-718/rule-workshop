@@ -30,12 +30,20 @@
 
 ## 環境による制限
 
-このMacではPlaywright配布のWebKitが `newPage()` で停止した。サイトを読み込まない空ページでも再現したため、WebKitによるサイト検証はGitHub ActionsのLinux環境で別途行う。ローカルのWebKitをPASSとは記録しない。
+このMacではPlaywright配布のWebKitが `newPage()` で停止した。サイトを読み込まない空ページでも再現したため、WebKitによるサイト検証はGitHub ActionsのLinux環境で別途実施し、14件成功した。ローカルのWebKitをPASSとは記録しない。
 
 iOS / Androidの実機、実際のSafariアプリ、スクリーンリーダーによる手動確認は未実施。低速回線や古い端末のロード性能は未計測。
 
-## 以前の公開確認
+## GitHub Actionsと公開確認（1.1）
 
-1.0の公開URLはHTTP 200と本番での操作を確認済み。Actions: https://github.com/yuka-718/rule-workshop/actions/runs/37198663838
+- 実装コミット: `08ee2282f7d6ae48cd8b515b2286fe9626c0cf3c`。
+- GitHub Actions / Linux / Ruby 3.4 / Node.js 22: Ruby **12テスト・793 assertions**、Node **3件**、ブラウザは **Chromium・Firefox・WebKitで各14件、計42件成功**。ビルドとPagesデプロイも成功。
+- アクセシビリティの3画面検査を各ブラウザで実施し、自動検査の違反0。
+- Actions: https://github.com/yuka-718/rule-workshop/actions/runs/37202514748
+- 前の実行でWebKitが共有問題の読み込み中の画面切り替え不具合を検出。処理中の切り替えを制御し、同じ場面の回帰検証を追加して上記42件を再実行した。
+- https://yuka-718.github.io/rule-workshop/ のHTTP 200と、修正版のJavaScript `index-BJsoS3LM.js` の配信を確認。
+- 公開URLに対するChromiumの操作検証も **3件成功**。編集→生成→誤答→正答→共有→別ブラウザで復元、ガイド閲覧・共有ハッシュ保持・画面切り替え、問題ファイル入出力・確認前の評価禁止・過大ファイル拒否を確認。
 
-1.1のGitHub Actionsと公開確認の結果は、完了後に追記する。
+## 提出パッケージ
+
+提出ZIPからビルド済みアプリを展開し、`/app/` をHTTPで配信。Chromiumで編集→生成→誤答→正答→共有→別ブラウザで復元、および共有URL保持・画面切り替えの**2件が成功**。ZIPのCRCと同梱ファイルのSHA-256を検証。作品紹介PDFは4ページを画像化して目視確認し、日本語フォントの埋め込みも確認。
